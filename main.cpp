@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
   }
 
   if (p > n) {
-    printf("u want 2 much my friend\n");
+    printf("Too many threads\n");
     MPI_Finalize();
     return -3;
   }
