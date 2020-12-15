@@ -174,21 +174,71 @@ int gaus(int n, double* inp, double* rev, double* frev,
       for (int k = 0; k < n; k++)
         rev[j * n + k] -= buf[k] * inp[j * n + i];
   }
-
-  for (int i = 0; i < n; i++) {
+  
+  for (int i = 0; i < n; i++) 
     if (i % p == rank)
       for (int j = 0; j < n; j++)
-        frev[i * n + j] = rev[i / p * n + j];
-    else
-      for (int j = 0; j < n; j++)
-        frev[i * n + j] = 0;
+        inp[i / p * n + j] = rev[i / p * n + j];
+  //MPI_Barrier(MPI_COMM_WORLD);
+  for (int i = 0; i < n; i++) { // collect full matrix
+    if (0 == rank) {
+      loc_i = i / p;
+      MPI_Sendrecv_replace(inp + loc_i * n, n, MPI_DOUBLE, i % p, 0, i % p, 0, MPI_COMM_WORLD, &st);//MPI_Recv(inp + loc_i * n, n, MPI_DOUBLE, i % p, 0, MPI_COMM_WORLD, &st);
+      memcpy(buf + i * n, inp + loc_i * n, n * sizeof(double));
+    }
+    else if ((i % p) == rank) {
+      loc_i = i / p; //MPI_Send(inp + loc_i * n, n, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+      MPI_Sendrecv_replace(inp + loc_i * n, n, MPI_DOUBLE, 0, 0, 0, 0, MPI_COMM_WORLD, &st);
+    }
   }
+  if (rank == 0) {
+    for (int i = 0; i < n; i++)
+      for (int j = 0; j < n; j++)
+        frev[index[i] * n + j] = buf[i * n + j];
+  }
+  for (int i = 0; i < n; i++) { // collect full matrix
+    if (0 == rank) {
+      loc_i = i / p;
+      memcpy(inp + loc_i * n, frev + i * n, n);
+      MPI_Sendrecv_replace(inp + loc_i * n, n, MPI_DOUBLE, i % p, 0, i % p, 0, MPI_COMM_WORLD, &st);
+    }
+    else if ((i % p) == rank) {
+      loc_i = i / p;
+      MPI_Sendrecv_replace(inp + loc_i * n, n, MPI_DOUBLE, 0, 0, 0, 0, MPI_COMM_WORLD, &st);
+      memcpy(rev + loc_i * n, inp + loc_i * n, n * sizeof(double));
+    }
+  }
+  //MPI_Barrier(MPI_COMM_WORLD);
+  //if (rank == 0) {
+  //  std::cout << "buf0" << std::endl;
+  //  _print_matrix(n, n, n, buf);
+  //  std::cout << "buf0" << std::endl;
+  //  std::cout << "frev0" << std::endl;
+  //  _print_matrix(n, n, n, frev);
+  //  std::cout << "frev0" << std::endl;
+  //}
+  //MPI_Barrier(MPI_COMM_WORLD);
+  //std::cout << "rev" << rank << std::endl;
+  //fflush(stdout);
+  //__print_matrix(1, n, rev, rank);
+  //std::cout << "rev" << rank << std::endl;
+  //fflush(stdout);
+  /*MPI_Bcast(frev, n * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);*/
+  //for (int i = 0; i < n; i++) {
+  //  if (i % p == rank)
+  //    for (int j = 0; j < n; j++)
+  //      frev[i * n + j] = rev[i / p * n + j];
+  //  else
+  //    for (int j = 0; j < n; j++)
+  //      frev[i * n + j] = 0;
+  //}
 
-  MPI_Allreduce(frev, buf, n * n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  //MPI_Allreduce(frev, buf, n * n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 
-  for (int i = 0; i < n; i++)
-    for (int j = 0; j < n; j++)
-      frev[index[i] * n + j] = buf[i * n + j];
+  //for (int i = 0; i < n; i++)
+  //  for (int j = 0; j < n; j++)
+  //    //frev[i * n + j] = buf[i * n + j];
+  //    frev[index[i] * n + j] = buf[i * n + j];
 
   return 1;
 }

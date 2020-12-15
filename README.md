@@ -1,1 +1,0 @@
-# gaus_mpi

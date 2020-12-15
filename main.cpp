@@ -44,8 +44,9 @@ int main(int argc, char** argv) {
 
   if (p > n) {
     printf("Too many threads\n");
-    MPI_Finalize();
-    return -3;
+    p = n;
+    //MPI_Finalize();
+    //return -3;
   }
 
   if ((cur_process + 1) > (n % p))
@@ -90,7 +91,7 @@ int main(int argc, char** argv) {
     return -5;
   }
 
-  if (cur_process == 0)
+  if (cur_process == 0) 
     std::cout << "input matrix" << std::endl;
   print_matrix(m, m, n, inp, buf, cur_process, p);
 
@@ -101,8 +102,23 @@ int main(int argc, char** argv) {
 
   MPI_Barrier(MPI_COMM_WORLD);
   time = MPI_Wtime() - time;
+  MPI_Bcast(full_reverse, n * n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  //for (int i = 0; i < n; i++) {
+  //  if (i % p == cur_process)
+  //    for (int j = 0; j < n; j++)
+  //      full_reverse[i * n + j] = rev[i / p * n + j];
+  //  else
+  //    for (int j = 0; j < n; j++)
+  //      full_reverse[i * n + j] = 0;
+  //}
+  //MPI_Allreduce(full_reverse, buf, n * n, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  //for (int i = 0; i < n; i++)
+  //  for (int j = 0; j < n; j++)
+  //    full_reverse[i * n + j] = buf[i * n + j];
 
   if (!gaus_algo_error) {
+    if(cur_process == 0)
+      std::cout << "det(matrix) = 0" << std::endl;
     delete[] inp, rev, buf, full_reverse, index;
     MPI_Finalize();
     return -6;

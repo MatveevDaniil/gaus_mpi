@@ -95,10 +95,22 @@ void _print_matrix(int m, int l, int n, double* matrix) {
   }
 }
 
+void __print_matrix(int m, int n, double* matrix, int rank) {
+  int i, j;
+
+  for (i = 0; i < m; i++) {
+    for (j = 0; j < n; j++) {
+      std::cout << matrix[i * n + j] << " ";
+    }
+    std::cout << "|rank = " << rank  << " |" << std::endl;
+  }
+}
+
 void print_matrix(int m, int l, int n, double* matrix,
                   double* buf, int cur_process, int p) {
   int idx_process;
   int rng = std::min(std::min(m, l), n / p);
+  rng = std::min(m, l);
   for (int i = 0; i < rng; i++) {
     idx_process = i % p;
 
