@@ -129,7 +129,7 @@ int main(int argc, char** argv) {
     _print_matrix(m, m, n, full_reverse);
   }
   if (cur_process == 0)
-    std::cout << "time: " << time / (double)CLOCKS_PER_SEC << " s" << std::endl;
+    std::cout << "time: " << time << " s" << std::endl;
 
   if (file_name == "")
     fill_matrix(k, inp, n, buf, cur_process, p);
